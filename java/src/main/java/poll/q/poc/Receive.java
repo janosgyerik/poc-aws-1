@@ -22,25 +22,34 @@ public class Receive {
 
     SqsClient sqs = SqsClient.builder().build();
 
-    ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-      .queueUrl(queueUrl)
-      .build();
-    List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
-
-    System.out.printf("Received %d message(s)\n", messages.size());
-
-    for (Message m : messages) {
-      System.out.println(m);
-
-      Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
-      JsonFormat.parser().merge(m.body(), builder);
-      System.out.println(builder.build());
-
-      DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
+    while (true) {
+      ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
         .queueUrl(queueUrl)
-        .receiptHandle(m.receiptHandle())
+        // enables long polling; valid values: [0, 20]
+        // See also: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html
+        .waitTimeSeconds(20)
         .build();
-      sqs.deleteMessage(deleteRequest);
+      List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
+
+      System.out.printf("Received %d message(s)\n", messages.size());
+
+      for (Message m : messages) {
+        System.out.println(m);
+
+        Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
+        JsonFormat.parser().merge(m.body(), builder);
+        System.out.println(builder.build());
+
+        DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
+          .queueUrl(queueUrl)
+          .receiptHandle(m.receiptHandle())
+          .build();
+        sqs.deleteMessage(deleteRequest);
+      }
+
+      if (!messages.isEmpty()) {
+        break;
+      }
     }
   }
 }
