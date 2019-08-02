@@ -6,6 +6,7 @@ package poll.q.poc;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.sonarcloud.shared.events.Events;
+import java.util.Date;
 import java.util.List;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
@@ -28,16 +29,17 @@ public class Receive {
         // enables long polling; valid values: [0, 20]
         // See also: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html
         .waitTimeSeconds(20)
+        .maxNumberOfMessages(10)
         .build();
       List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
 
-      System.out.printf("Received %d message(s)\n", messages.size());
+      System.out.printf("Received %d message(s) at %s\n", messages.size(), new Date());
 
       for (Message m : messages) {
         System.out.println(m);
 
         Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
-        JsonFormat.parser().merge(m.body(), builder);
+        JsonFormat.parser().ignoringUnknownFields().merge(m.body(), builder);
         System.out.println(builder.build());
 
         DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
