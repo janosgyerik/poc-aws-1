@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package events;
+
+option java_package = "io.sonarcloud.shared.events";
+option java_outer_classname = "Events";
+
+message PullRequestOpenedEvent {
+  string cuuid = 1;
+  string date = 2;
+  string alm = 3;
+  Repository repository = 4;
+  PullRequest pull_request = 5;
+
+  message Repository {
+    string full_name = 1;
+    string id = 2;
+  }
+
+  message PullRequest {
+    string key = 1;
+    string title = 2;
+    string url = 3;
+    string type = 4;
+    Branch base = 5;
+    Branch head = 6;
+  }
+
+  message Branch {
+    string branch = 1;
+    string label = 2;
+  }
+}

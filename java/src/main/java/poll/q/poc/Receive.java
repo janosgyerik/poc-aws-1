@@ -3,6 +3,9 @@
  */
 package poll.q.poc;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
+import io.sonarcloud.shared.events.Events;
 import java.util.List;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
@@ -10,30 +13,34 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 public class Receive {
-    public static void main(String[] args) {
-        String queueUrl = System.getenv("SQS_QUEUE_URL");
-        if (queueUrl == null) {
-            System.err.println("Error: SQS_QUEUE_URL environment variable not set. Set it to the URL of the queue.");
-            System.exit(1);
-        }
-
-        SqsClient sqs = SqsClient.builder().build();
-
-        ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-          .queueUrl(queueUrl)
-          .build();
-        List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
-
-        System.out.printf("Received %d message(s)\n", messages.size());
-
-        for (Message m : messages) {
-            System.out.println(m);
-
-            DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
-              .queueUrl(queueUrl)
-              .receiptHandle(m.receiptHandle())
-              .build();
-            sqs.deleteMessage(deleteRequest);
-        }
+  public static void main(String[] args) throws InvalidProtocolBufferException {
+    String queueUrl = System.getenv("SQS_QUEUE_URL");
+    if (queueUrl == null) {
+      System.err.println("Error: SQS_QUEUE_URL environment variable not set. Set it to the URL of the queue.");
+      System.exit(1);
     }
+
+    SqsClient sqs = SqsClient.builder().build();
+
+    ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+      .queueUrl(queueUrl)
+      .build();
+    List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
+
+    System.out.printf("Received %d message(s)\n", messages.size());
+
+    for (Message m : messages) {
+      System.out.println(m);
+
+      Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
+      JsonFormat.parser().merge(m.body(), builder);
+      System.out.println(builder.build());
+
+      DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
+        .queueUrl(queueUrl)
+        .receiptHandle(m.receiptHandle())
+        .build();
+      sqs.deleteMessage(deleteRequest);
+    }
+  }
 }
