@@ -46,6 +46,7 @@ def main():
     pr_opened = {
             'cuuid': str(uuid.uuid4()),
             'date': timestamp(),
+            'type': 'pull-request-opened',
             'alm': 'github',
             'repository': {
                 'full_name': 'janosgyerik/upvotejs',

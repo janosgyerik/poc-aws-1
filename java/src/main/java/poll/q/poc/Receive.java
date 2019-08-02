@@ -38,9 +38,17 @@ public class Receive {
       for (Message m : messages) {
         System.out.println(m);
 
-        Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
-        JsonFormat.parser().ignoringUnknownFields().merge(m.body(), builder);
-        System.out.println(builder.build());
+        String body = m.body();
+        Events.Event event = parseEvent(body);
+        if (event == null) {
+          System.out.println("Could not parse message as an Event");
+        } else if (!"pull-request-opened".equals(event.getType())) {
+          System.out.printf("Unsupported event type: '%s'\n", event.getType());
+        } else {
+          Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
+          JsonFormat.parser().ignoringUnknownFields().merge(body, builder);
+          System.out.println(builder.build());
+        }
 
         DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
           .queueUrl(queueUrl)
@@ -52,6 +60,16 @@ public class Receive {
       if (!messages.isEmpty()) {
         break;
       }
+    }
+  }
+
+  private static Events.Event parseEvent(String body) {
+    try {
+      Events.Event.Builder eventBuilder = Events.Event.newBuilder();
+      JsonFormat.parser().ignoringUnknownFields().merge(body, eventBuilder);
+      return eventBuilder.build();
+    } catch (InvalidProtocolBufferException e) {
+      return null;
     }
   }
 }
