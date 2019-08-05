@@ -33,6 +33,7 @@ def retrieve_sqs_messages(sqs_queue_url, num_msgs=1, wait_time=0, visibility_tim
     sqs_client = boto3.client('sqs')
     try:
         msgs = sqs_client.receive_message(QueueUrl=sqs_queue_url,
+                                          MessageAttributeNames=['event_type'],
                                           MaxNumberOfMessages=num_msgs,
                                           WaitTimeSeconds=wait_time,
                                           VisibilityTimeout=visibility_time)
@@ -40,7 +41,7 @@ def retrieve_sqs_messages(sqs_queue_url, num_msgs=1, wait_time=0, visibility_tim
         logging.error(e)
         return None
 
-    return msgs['Messages']
+    return msgs['Messages'] if 'Messages' in msgs else None
 
 
 def delete_sqs_message(sqs_queue_url, msg_receipt_handle):
@@ -73,7 +74,13 @@ def main():
             logging.info(f'SQS: Message ID: {msg["MessageId"]}, '
                          f'Contents: {msg["Body"]}')
 
-            if msg["Body"].startswith('{'):
+            if 'MessageAttributes' not in msg:
+                print('Warning: MessageAttributes missing in the message (deleting anyway)')
+            elif 'event_type' not in msg["MessageAttributes"]:
+                print('Warning: event_type message attribute missing (invalid pull-request-opened event) (deleting anyway)')
+            elif msg["MessageAttributes"]['event_type']['StringValue'] != 'pull-request-opened':
+                print('Warning: event_type is not pull-request-opened (deleting anyway)')
+            else:
                 print(json.dumps(json.loads(msg["Body"]), indent=2))
 
             # Remove the message from the queue
