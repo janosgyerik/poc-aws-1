@@ -1,26 +1,13 @@
 syntax = "proto3";
 
-package events;
-
-option java_package = "io.sonarcloud.shared.events";
-option java_outer_classname = "Events";
-
-message Event {
-  string cuuid = 1;
-  string date = 2;
-  string type = 3;
-}
+package io.sonarcloud.shared.event;
 
 message PullRequestOpenedEvent {
-  // common fields, copied from "parent type" Event
   string cuuid = 1;
   string date = 2;
-  string type = 3;
-
-  // type-specific fields
-  string alm = 10;
-  Repository repository = 11;
-  PullRequest pull_request = 12;
+  string alm = 3;
+  Repository repository = 4;
+  PullRequest pull_request = 5;
 
   message Repository {
     string full_name = 1;

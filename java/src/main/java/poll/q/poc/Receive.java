@@ -8,9 +8,11 @@ import com.google.protobuf.util.JsonFormat;
 import io.sonarcloud.shared.events.Events;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 public class Receive {
@@ -30,6 +32,7 @@ public class Receive {
         // See also: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html
         .waitTimeSeconds(20)
         .maxNumberOfMessages(10)
+        .messageAttributeNames("event_type")
         .build();
       List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
 
@@ -38,15 +41,14 @@ public class Receive {
       for (Message m : messages) {
         System.out.println(m);
 
-        String body = m.body();
-        Events.Event event = parseEvent(body);
-        if (event == null) {
-          System.out.println("Could not parse message as an Event");
-        } else if (!"pull-request-opened".equals(event.getType())) {
-          System.out.printf("Unsupported event type: '%s'\n", event.getType());
+        Map<String, MessageAttributeValue> messageAttributes = m.messageAttributes();
+        if (!messageAttributes.containsKey("event_type")) {
+          System.err.println("Warning: event_type message attribute missing (invalid pull-request-opened event) (deleting anyway)");
+        } else if (!"pull-request-opened".equals(messageAttributes.get("event_type").stringValue())) {
+          System.err.println("Warning: event_type is not pull-request-opened (deleting anyway)");
         } else {
           Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
-          JsonFormat.parser().ignoringUnknownFields().merge(body, builder);
+          JsonFormat.parser().ignoringUnknownFields().merge(m.body(), builder);
           System.out.println(builder.build());
         }
 
@@ -60,16 +62,6 @@ public class Receive {
       if (!messages.isEmpty()) {
         break;
       }
-    }
-  }
-
-  private static Events.Event parseEvent(String body) {
-    try {
-      Events.Event.Builder eventBuilder = Events.Event.newBuilder();
-      JsonFormat.parser().ignoringUnknownFields().merge(body, eventBuilder);
-      return eventBuilder.build();
-    } catch (InvalidProtocolBufferException e) {
-      return null;
     }
   }
 }
