@@ -3,17 +3,17 @@
  */
 package poll.q.poc;
 
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.sonarcloud.shared.events.Events;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
-import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 public class Receive {
   public static void main(String[] args) throws InvalidProtocolBufferException {
@@ -23,40 +23,37 @@ public class Receive {
       System.exit(1);
     }
 
-    SqsClient sqs = SqsClient.builder().build();
+    AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
 
     while (true) {
-      ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
-        .queueUrl(queueUrl)
+      ReceiveMessageRequest receiveRequest = new ReceiveMessageRequest(queueUrl)
         // enables long polling; valid values: [0, 20]
         // See also: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html
-        .waitTimeSeconds(20)
-        .maxNumberOfMessages(10)
-        .messageAttributeNames("event_type")
-        .build();
-      List<Message> messages = sqs.receiveMessage(receiveRequest).messages();
+        .withWaitTimeSeconds(20)
+        .withMaxNumberOfMessages(10)
+        .withMessageAttributeNames("event_type");
+
+      System.out.println("Waiting for messages...");
+
+      List<Message> messages = sqs.receiveMessage(receiveRequest).getMessages();
 
       System.out.printf("Received %d message(s) at %s\n", messages.size(), new Date());
 
       for (Message m : messages) {
         System.out.println(m);
 
-        Map<String, MessageAttributeValue> messageAttributes = m.messageAttributes();
+        Map<String, MessageAttributeValue> messageAttributes = m.getMessageAttributes();
         if (!messageAttributes.containsKey("event_type")) {
           System.err.println("Warning: event_type message attribute missing (invalid pull-request-opened event) (deleting anyway)");
-        } else if (!"pull-request-opened".equals(messageAttributes.get("event_type").stringValue())) {
+        } else if (!"pull-request-opened".equals(messageAttributes.get("event_type").getStringValue())) {
           System.err.println("Warning: event_type is not pull-request-opened (deleting anyway)");
         } else {
           Events.PullRequestOpenedEvent.Builder builder = Events.PullRequestOpenedEvent.newBuilder();
-          JsonFormat.parser().ignoringUnknownFields().merge(m.body(), builder);
+          JsonFormat.parser().ignoringUnknownFields().merge(m.getBody(), builder);
           System.out.println(builder.build());
         }
 
-        DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
-          .queueUrl(queueUrl)
-          .receiptHandle(m.receiptHandle())
-          .build();
-        sqs.deleteMessage(deleteRequest);
+        sqs.deleteMessage(queueUrl, m.getReceiptHandle());
       }
 
       if (!messages.isEmpty()) {

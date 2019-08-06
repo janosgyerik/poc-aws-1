@@ -20,12 +20,13 @@ ext {
 }
 
 dependencies {
-    implementation(platform("software.amazon.awssdk:bom:2.5.29"))
-    implementation("software.amazon.awssdk:sqs")
-    // required to resolve credentials using correct IAM role for the AWS_PROFILE env var
-    runtime("software.amazon.awssdk:sts")
     implementation("com.google.protobuf:protobuf-java:${extra["protobuf.version"]}")
     implementation("com.google.protobuf:protobuf-java-util:${extra["protobuf.version"]}")
+
+    implementation(platform("com.amazonaws:aws-java-sdk-bom:1.11.604"))
+    implementation("com.amazonaws:aws-java-sdk-sqs")
+    // required to resolve credentials using correct IAM role for the AWS_PROFILE env var
+    runtime("com.amazonaws:aws-java-sdk-sts")
 }
 
 // Specify the protoc executable to use to generate files
