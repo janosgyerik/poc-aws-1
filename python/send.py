@@ -10,6 +10,7 @@ import json
 import uuid
 import datetime
 import sys
+from argparse import ArgumentParser
 
 
 def timestamp():
@@ -35,23 +36,8 @@ def send_sqs_message(sqs_queue_url, msg_attributes, msg_body):
     return msg
 
 
-def main():
-    sqs_queue_url = os.environ.get('SQS_QUEUE_URL')
-    if not sqs_queue_url:
-        print('Error: SQS_QUEUE_URL environment variable not set. Set it to the URL of the queue.')
-        sys.exit(1)
-
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)s: %(asctime)s: %(message)s')
-
-    msg_attributes = {
-        'event_type': {
-            'StringValue': 'pull-request-opened',
-            'DataType': 'String',
-        },
-    }
-
-    pr_opened = {
+def sample():
+    return {
         'cuuid': str(uuid.uuid4()),
         'date': timestamp(),
         'alm': 'github',
@@ -79,7 +65,36 @@ def main():
         },
     }
 
-    msg_body = json.dumps(pr_opened)
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("-j", "--json", help="JSON file to send")
+    parser.add_argument("-t", "--event-type", help="The event type to use", default="pull-request-opened")
+    args = parser.parse_args()
+
+    if args.json:
+        with open(args.json) as fh:
+            obj = json.loads(fh.read())
+    else:
+        obj = sample()
+
+    obj['cuuid'] = str(uuid.uuid4())
+    msg_body = json.dumps(obj)
+
+    sqs_queue_url = os.environ.get('SQS_QUEUE_URL')
+    if not sqs_queue_url:
+        print('Error: SQS_QUEUE_URL environment variable not set. Set it to the URL of the queue.')
+        sys.exit(1)
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(levelname)s: %(asctime)s: %(message)s')
+
+    msg_attributes = {
+        'event_type': {
+            'StringValue': args.event_type,
+            'DataType': 'String',
+        },
+    }
+
     msg = send_sqs_message(sqs_queue_url, msg_attributes, msg_body)
     if msg is not None:
         logging.info(f'Sent SQS message ID: {msg["MessageId"]}')
