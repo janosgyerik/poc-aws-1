@@ -55,6 +55,10 @@ def main():
         'cuuid': str(uuid.uuid4()),
         'date': timestamp(),
         'alm': 'github',
+        'project': {
+            'key': 'janosgyerik_upvotejs',
+            'organization_key': 'janosgyerik-github',
+        },
         'repository': {
             'full_name': 'janosgyerik/upvotejs',
             'id': '10805910',
