@@ -1,5 +1,5 @@
-Examples using SQS
-==================
+Examples using SQS and related
+==============================
 
 Copy of `env.sh.sample` to `env.sh` and customize it.
 
