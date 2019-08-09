@@ -27,6 +27,8 @@ def send_sqs_message(sqs_queue_url, msg_attributes, msg_body):
 
     sqs_client = boto3.client('sqs')
     try:
+        logging.info('sending with message attributes: {}'.format(json.dumps(msg_attributes, indent=2)))
+        logging.info('sending with body: {}'.format(json.dumps(json.loads(msg_body), indent=2)))
         msg = sqs_client.send_message(QueueUrl=sqs_queue_url,
                                       MessageAttributes=msg_attributes,
                                       MessageBody=msg_body)
