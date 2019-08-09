@@ -27,6 +27,8 @@ def publish_sns_message(sns_topic_arn, msg_attributes, msg_body):
 
     sns_client = boto3.client('sns')
     try:
+        logging.info('publishing with message attributes: {}'.format(json.dumps(msg_attributes, indent=2)))
+        logging.info('publishing with body: {}'.format(json.dumps(json.loads(msg_body), indent=2)))
         msg = sns_client.publish(TopicArn=sns_topic_arn,
                                  MessageAttributes=msg_attributes,
                                  Message=msg_body)
