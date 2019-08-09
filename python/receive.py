@@ -79,6 +79,7 @@ def main():
             elif 'event_type' not in msg["MessageAttributes"]:
                 print('Warning: event_type message attribute missing (invalid pull-request-opened event) (deleting anyway)')
             else:
+                print(json.dumps(msg["MessageAttributes"], indent=2))
                 print(json.dumps(json.loads(msg["Body"]), indent=2))
 
             # Remove the message from the queue
