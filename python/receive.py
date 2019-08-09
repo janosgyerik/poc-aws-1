@@ -65,7 +65,7 @@ def main():
 
     num_messages = 2
 
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(asctime)s: %(message)s')
 
     msgs = retrieve_sqs_messages(sqs_queue_url, num_messages)
@@ -78,8 +78,6 @@ def main():
                 print('Warning: MessageAttributes missing in the message (deleting anyway)')
             elif 'event_type' not in msg["MessageAttributes"]:
                 print('Warning: event_type message attribute missing (invalid pull-request-opened event) (deleting anyway)')
-            elif msg["MessageAttributes"]['event_type']['StringValue'] != 'pull-request-opened':
-                print('Warning: event_type is not pull-request-opened (deleting anyway)')
             else:
                 print(json.dumps(json.loads(msg["Body"]), indent=2))
 

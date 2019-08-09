@@ -85,7 +85,7 @@ def main():
         print('Error: SQS_QUEUE_URL environment variable not set. Set it to the URL of the queue.')
         sys.exit(1)
 
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(asctime)s: %(message)s')
 
     msg_attributes = {
