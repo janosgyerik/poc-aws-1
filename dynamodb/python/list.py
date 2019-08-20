@@ -12,7 +12,10 @@ def list_items(table):
     response = table.scan(ConsistentRead=True)
 
     for item in response['Items']:
-        logging.info(json.dumps(item, indent=2))
+        try:
+            logging.info(json.dumps(item, indent=2))
+        except:
+            logging.info(item)
 
 
 def main():
