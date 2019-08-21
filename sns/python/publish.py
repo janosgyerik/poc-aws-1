@@ -82,6 +82,7 @@ def main():
 
     obj['cuuid'] = str(uuid.uuid4())
     obj['analysis_id'] = str(uuid.uuid4())
+    obj['date'] = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     msg_body = json.dumps(obj)
 
     sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
