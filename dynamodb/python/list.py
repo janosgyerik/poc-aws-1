@@ -4,18 +4,23 @@ import logging
 import os
 import sys
 from argparse import ArgumentParser
+from decimal import Decimal
 
 import boto3
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
 
 
 def list_items(table):
     response = table.scan(ConsistentRead=True)
 
     for item in response['Items']:
-        try:
-            logging.info(json.dumps(item, indent=2))
-        except:
-            logging.info(item)
+        logging.info(json.dumps(item, indent=2, cls=DecimalEncoder))
 
 
 def main():
