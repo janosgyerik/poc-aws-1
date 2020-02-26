@@ -22,6 +22,8 @@ ext {
 dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.5.29"))
     implementation("software.amazon.awssdk:sqs")
+    implementation("software.amazon.awssdk:ses")
+    implementation("com.sun.mail:javax.mail:1.5.6")
     // required to resolve credentials using correct IAM role for the AWS_PROFILE env var
     runtime("software.amazon.awssdk:sts")
     implementation("com.google.protobuf:protobuf-java:${extra["protobuf.version"]}")
