@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/java:11
+FROM gcr.io/distroless/java:11-debug
 # https://github.com/GoogleContainerTools/distroless/issues/253
 ENV APP_HOME="/app"
 # note: -Xmx2m would be enough to run Java, but not enough for the file uploader program,

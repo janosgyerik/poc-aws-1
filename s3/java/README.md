@@ -5,17 +5,11 @@ POC: trigger file upload on OOM in distroless
 Setup
 -----
 
-Build the jars, in the project root (one level up) run: 
+Clone this repo and POC branch:
 
-    ./gradlew build
+    git clone git@github.com:janos-ss/poc-aws --branch feature/janos/files2s3
 
-Copy the jars to `app` directory:
-
-    cp ../oom/build/libs/oom.jar ../files2s3/build/libs/files2s3-with-dependencies.jar ../hello/build/libs/hello.jar app
-
-Build and run the docker image:
-
-    docker build -t oom . && docker run oom
+Run `./repro.sh`, it will build the jars and the docker image. 
 
 Running the same command outside of docker
 ------------------------------------------
