@@ -53,9 +53,11 @@ Setup
 
 Clone this repo and POC branch:
 
-    git clone git@github.com:janos-ss/poc-aws --branch feature/janos/files2s3
+    git clone git@github.com:janos-ss/poc-aws
 
-Run `./repro.sh`, it will build the jars and the docker image. 
+`cd` into the directory of this README file.
+
+Run `./repro.sh`: it will build the jars and the docker image. 
 
 Running the same command outside of docker
 ------------------------------------------

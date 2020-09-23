@@ -2,11 +2,6 @@ import org.gradle.jvm.tasks.Jar
 
 plugins {
     java
-
-    // needed for easy running with: ./gradlew run
-    application
-
-    idea
 }
 
 repositories {
@@ -20,16 +15,12 @@ dependencies {
     runtime("software.amazon.awssdk:sts")
 }
 
-application {
-    mainClassName = "s3.upload.Files2S3"
-}
-
 val fatJar = task("fatJar", type = Jar::class) {
-    baseName = "${project.name}-with-dependencies"
+    archiveFileName.set("${project.name}-with-dependencies.jar")
     manifest {
         attributes["Main-Class"] = "s3.upload.Files2S3"
     }
-    from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
     with(tasks.jar.get() as CopySpec)
 }
 
