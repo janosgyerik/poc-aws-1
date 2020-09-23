@@ -11,3 +11,4 @@ rootProject.name = "files2s3"
 
 include("files2s3")
 include("oom")
+include("hello")

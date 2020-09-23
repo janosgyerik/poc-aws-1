@@ -11,7 +11,7 @@ Build the jars, in the project root (one level up) run:
 
 Copy the jars to `app` directory:
 
-    cp ../oom/build/libs/oom.jar ../files2s3/build/libs/files2s3-with-dependencies.jar app
+    cp ../oom/build/libs/oom.jar ../files2s3/build/libs/files2s3-with-dependencies.jar ../hello/build/libs/hello.jar app
 
 Build and run the docker image:
 
